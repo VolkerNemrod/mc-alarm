@@ -43,6 +43,9 @@ public final class CentralaHistoriaGui {
             TypZdarzenia.CONTAINER_OPEN, TypZdarzenia.CONTAINER_ITEM_ADD, TypZdarzenia.CONTAINER_ITEM_REMOVE
     };
 
+    private static final DateTimeFormatter FORMAT_CZASU =
+            DateTimeFormatter.ofPattern("dd.MM HH:mm:ss").withZone(ZoneId.systemDefault());
+
     private CentralaHistoriaGui() {
     }
 

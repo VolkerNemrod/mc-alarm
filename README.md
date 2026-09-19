@@ -26,7 +26,7 @@
 - **Alarm** — zdarzenie obcego skonfigurowane jako alarmujące przełącza centralę z CZUWANIE w ALARM: syrena i lampa pulsują co sekundę przez `alarm.domyslny-czas-trwania-sekundy`, właściciel dostaje komunikat, potem centrala wraca do CZUWANIE.
 - **Konfiguracja reakcji** — per centrala, które typy zdarzeń wywołują alarm (komenda i GUI).
 - **Głośnik** — dodatkowy blok (NOTE_BLOCK z własną recepturą), działa tylko w strefie alarmowej, ma własne GUI (dźwięk ON/OFF, efekty wizualne ON/OFF); podczas alarmu gra dzwonek i wyświetla cząsteczki.
-- **GUI centrali** — panel główny, historia, incydenty (lista i szczegóły incydentu), zaufani (podgląd + dodawanie/usuwanie przez czat, tak jak zmiana nazwy), reakcje, regulacja strefy (pasek wełny w gradiencie, klasa rozmiaru, obrys cząsteczkami, Zapisz/Reset/Wróć), zmiana nazwy, uzbrojenie/rozbrojenie. Dostęp: właściciel i zaufani mogą otworzyć GUI i uzbroić/rozbroić; zarządzanie (strefa, zaufani, reakcje, nazwa) tylko dla właściciela.
+- **GUI centrali** — panel główny, historia (filtr typu, filtr gracza po liście ostatnich, stronicowanie — do 45 zdarzeń na stronę), incydenty (lista i szczegóły incydentu), zaufani (podgląd + dodawanie/usuwanie przez czat, tak jak zmiana nazwy), reakcje, regulacja strefy (pasek wełny w gradiencie, klasa rozmiaru, obrys cząsteczkami, Zapisz/Reset/Wróć), zmiana nazwy, uzbrojenie/rozbrojenie. Dostęp: właściciel i zaufani mogą otworzyć GUI i uzbroić/rozbroić; zarządzanie (strefa, zaufani, reakcje, nazwa) tylko dla właściciela.
 - **Odporność na spam i retencja** — cooldowny (wejście do strefy 2 s, bloki 500 ms, otwarcie kontenera 5 s), obsługa teleportacji, automatyczne czyszczenie historii wg `historia.retencja-dni`.
 
 ### Receptury
@@ -91,7 +91,8 @@ Receptury są tymczasowe — docelowo zostaną zmienione wraz z własnymi modela
 
 ### Czeka na weryfikację
 
-- Etap 4 (dawny, plan ROZSZERZENIE GUI): dodawanie zaufanych z GUI + wymuszenie D1 (tylko właściciel zarządza strefa/zaufani/reakcje/nazwa) — zaimplementowane 2026-09-19, jeszcze bez `mvn clean package`/testu w grze,
+- Etap 5 (dawny, plan ROZSZERZENIE GUI): filtry i stronicowanie w GUI historii — zaimplementowane 2026-09-19, jeszcze bez `mvn clean package`/testu w grze,
+- Etap 4: dodawanie zaufanych z GUI + D1 — skompilowane, test w grze niepotwierdzony explicit,
 - szczegóły incydentu w GUI — build przechodzi (`BUILD SUCCESS`, 2026-09-18), brak testu w grze,
 - większość zmian od 2026-09-13 potwierdzona tylko przez `mvn clean package`, bez testu w grze.
 
@@ -99,7 +100,6 @@ Receptury są tymczasowe — docelowo zostaną zmienione wraz z własnymi modela
 
 - rejestrowanie interakcji: drzwi, przyciski, dźwignie (typy `DOOR_USE`, `TRAPDOOR_USE`, `BUTTON_USE`, `LEVER_USE` są zarezerwowane w enumie `TypZdarzenia`, ale nic ich jeszcze nie rejestruje),
 - osobny, wybieralny tryb MONITORING (`/alarm mode`) oraz komendy `/alarm info` i `/alarm status`,
-- filtry i stronicowanie w GUI historii (działają filtry w komendzie: `/alarm history gracz=<nick> typ=<TYP>`; ekran GUI pokazuje tylko ostatnie 27 bez filtrowania/stronicowania),
 - fizyczne, stawiane bloki syreny i lampy (obecnie to efekty przy centrali),
 - Etap 10: testy w grze i kryterium ukończenia (sekcja 25),
 - własne modele i tekstury bloków (resource pack).
@@ -1396,7 +1396,7 @@ Dzięki temu można rozwijać plugin bez przebudowy całego systemu.
 - [ ] lepsza klasyfikacja zdarzeń
 - [x] automatyczne grupowanie incydentów
 - [x] retencja danych
-- [ ] lepsze GUI
+- [x] lepsze GUI
 - [x] bardziej szczegółowe filtry historii (`gracz=`, `typ=`)
 
 ## V1.2

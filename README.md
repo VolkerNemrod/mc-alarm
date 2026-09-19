@@ -1,5 +1,7 @@
 # 🚨 Alarm System — Minecraft Plugin
 
+> ⬇️ **[Pobierz najnowszą wersję](https://github.com/VolkerNemrod/mc-alarm/releases/latest)** — gotowy `.jar` do wgrania na serwer Paper (najnowsza wersja automatycznie budowana z taga Git)
+
 > Projekt: system alarmowy, monitoring i czarna skrzynka dla graczy  
 > Status: **V1 w implementacji — etapy 0–9 zaimplementowane, trwa testowanie w grze** (stan na 2026-09-19, szczegóły w sekcji 0)  
 > Cel: stworzenie modułowego pluginu Paper/Spigot, który pozwala graczom wyposażyć swoje budynki w system alarmowy rejestrujący aktywność innych graczy.
@@ -19,21 +21,28 @@
 
 ### Zaimplementowane
 
-- **Centrala** — blok Lectern z własną recepturą; właściciel, nazwa (zmiana z GUI przez czat), strefa (tworzona automatycznie 7×7×7 przy postawieniu bloku), lista zaufanych, tryby pracy. Jedyny sposób usunięcia: rozbroić i zburzyć fizycznie blok (uzbrojona centrala pulsuje i wybucha zamiast pozwolić się spokojnie rozłożyć) — zawsze kasuje historię i incydenty tej centrali (świadome odstępstwo od GAMEPLAY_SPEC rozdz. 5, decyzja Volkera 2026-09-18: `/alarm remove` usunięte jako zbędne, mem-palace wing mc-alarm).
+- **Centrala** — blok Lectern z własną recepturą; właściciel, nazwa (zmiana z GUI przez czat), strefa (tworzona automatycznie 7×7×7 przy postawieniu bloku), lista zaufanych, tryby pracy. Jedyny sposób usunięcia: rozbroić i zburzyć fizycznie blok (uzbrojona centrala pulsuje i wybucha zamiast pozwolić się spokojnie rozłożyć) — zawsze kasuje historię i incydenty tej centrali (świadoma decyzja Volkera, uproszczenie z 2026-09-19: `/alarm remove` usunięte jako zbędne, mem-palace wing mc-alarm).
 - **Strefa** — tworzona automatycznie (7×7×7) przy postawieniu bloku centrali; rozmiar regulowany w GUI (pasek wełny w gradiencie kolorów, klasa rozmiaru, obrys cząsteczkami) lub przez `/alarm zone` (alternatywa, ten sam limit 3–15 co GUI).
 - **Rejestrowanie zdarzeń** — w strefie rejestrowanych jest 7 typów: `PLAYER_ENTER_ZONE`, `PLAYER_EXIT_ZONE`, `BLOCK_BREAK`, `BLOCK_PLACE`, `CONTAINER_OPEN`, `CONTAINER_ITEM_ADD`, `CONTAINER_ITEM_REMOVE`. Zmiany w kontenerach liczone jako różnica zawartości przed/po (samo przesuwanie przedmiotów nie tworzy wpisów). Ważność: INFO / WARNING / SUSPICIOUS / CRITICAL. Zdarzenia zapisywane są w każdym trybie pracy.
 - **Incydenty** — zdarzenia obcego w uzbrojonej strefie grupowane w jedną „wizytę”; zamykane przy wyjściu ze strefy, wylogowaniu, końcu alarmu i ręcznym rozbrojeniu.
 - **Alarm** — zdarzenie obcego skonfigurowane jako alarmujące przełącza centralę z CZUWANIE w ALARM: syrena i lampa pulsują co sekundę przez `alarm.domyslny-czas-trwania-sekundy`, właściciel dostaje komunikat, potem centrala wraca do CZUWANIE.
 - **Konfiguracja reakcji** — per centrala, które typy zdarzeń wywołują alarm (komenda i GUI).
 - **Głośnik** — dodatkowy blok (NOTE_BLOCK z własną recepturą), działa tylko w strefie alarmowej, ma własne GUI (dźwięk ON/OFF, efekty wizualne ON/OFF); podczas alarmu gra dzwonek i wyświetla cząsteczki.
-- **GUI centrali** — panel główny, historia (filtr typu, filtr gracza po liście ostatnich, stronicowanie — do 45 zdarzeń na stronę), incydenty (lista i szczegóły incydentu), zaufani (podgląd + dodawanie/usuwanie przez czat, tak jak zmiana nazwy), reakcje, regulacja strefy (pasek wełny w gradiencie, klasa rozmiaru, obrys cząsteczkami, Zapisz/Reset/Wróć), zmiana nazwy, uzbrojenie/rozbrojenie. Dostęp: właściciel i zaufani mogą otworzyć GUI i uzbroić/rozbroić; zarządzanie (strefa, zaufani, reakcje, nazwa) tylko dla właściciela.
+- **GUI centrali** — panel główny, historia (filtr typu, filtr gracza po liście ostatnich, stronicowanie — do 45 zdarzeń na stronę), incydenty (lista i szczegóły incydentu), zaufani (podgląd + dodawanie/usuwanie przez czat, tak jak zmiana nazwy), reakcje, regulacja strefy (pasek wełny w gradiencie, klasa rozmiaru, obrys cząsteczkami, Zapisz/Reset/Wróć), zmiana nazwy, uzbrojenie/rozbrojenie. Dostęp: właściciel i zaufani mogą otworzyć GUI i uzbroić/rozbroić; zarządzanie (strefa, zaufani, reakcje, nazwa) tylko dla właściciela. Rzeczywisty układ panelu głównego — patrz sekcja 14.
 - **Odporność na spam i retencja** — cooldowny (wejście do strefy 2 s, bloki 500 ms, otwarcie kontenera 5 s), obsługa teleportacji, automatyczne czyszczenie historii wg `historia.retencja-dni`.
+
+### Zasady pracy nad projektem
+
+- **dokładność > kompletność** — jeżeli nie da się wiarygodnie ustalić sprawcy (eksplozja, hopper, inny plugin), zdarzenie NIE powinno przypisywać gracza na siłę (patrz sekcja 26),
+- **bez rozszerzania zakresu bez zlecenia** — funkcje spoza aktualnie ustalonego zakresu V1 (PIN, karty dostępu, Discord, panel webowy, kamery, ekonomia, zaawansowane reguły — patrz sekcja 22) nie są dodawane samodzielnie, dopóki nie zostaną osobno zlecone.
 
 ### Receptury
 
 Oba bloki craftuje się w stole rzemieślniczym (układ 3×3, oba układy są symetryczne). Zwykły Lectern i zwykły Note Block **nie** są centralami ani głośnikami — tylko przedmiot z tej receptury ma specjalny znacznik.
 
 **Centrala VolkerNemrodAlarm** (blok Lectern):
+
+![Receptura Centrali VolkerNemrodAlarm](centrala.png)
 
 ```text
 [ Sztabka żelaza ] [ Księga ]   [ Sztabka żelaza ]
@@ -44,6 +53,8 @@ Oba bloki craftuje się w stole rzemieślniczym (układ 3×3, oba układy są sy
 Składniki: 4 × sztabka żelaza, 1 × księga, 3 × redstone. Wynik: 1 × Centrala VolkerNemrodAlarm.
 
 **Głośnik VolkerNemrodAlarm** (blok Note Block):
+
+![Receptura Głośnika VolkerNemrodAlarm](glosnik-alarmowy.png)
 
 ```text
 [ Sztabka żelaza ] [ Redstone ]    [ Sztabka żelaza ]
@@ -671,29 +682,27 @@ Wszystkie istotne zdarzenia dotyczące konkretnej strefy.
 
 # 14. GUI centrali
 
-Centrala powinna posiadać czytelne GUI.
-
-Przykład:
+> Poniższy diagram to **rzeczywisty układ** panelu głównego (`CentralaGui.java`), nie pierwotna koncepcja — został dopasowany podczas implementacji. Ekwipunek 27 slotów (3 rzędy po 9), reszta pusta:
 
 ```text
-┌─────────────────────────────┐
-│       🚨 ALARM SYSTEM       │
-├─────────────────────────────┤
-│ Status: 🟢 UZBROJONY        │
-│ Monitoring: AKTYWNY         │
-│ Strefa: DOM                 │
-│ Właściciel: Volker          │
-│                             │
-│ Ostatni intruz: Steve       │
-│                             │
-│ [ HISTORIA ]                │
-│ [ INCYDENTY ]               │
-│ [ STREFA ]                  │
-│ [ ZAUFANI ]                 │
-│ [ USTAWIENIA ]              │
-│ [ UZBRÓJ / ROZBRÓJ ]       │
-└─────────────────────────────┘
+Rząd 0:  .  .  [Strefa]  .  [Status]  .  .  .  .
+Rząd 1:  [Zaufani]  .  [Info/nazwa]  .  [Uzbrój/Rozbrój]  .  [Historia]  .  [Reakcje]
+Rząd 2:  .  .  [Incydenty]  .  [Zamknij]  .  .  .  .
 ```
+
+Opis przycisków:
+
+- **Strefa** — brak strefy: „Utwórz strefę” (tworzy domyślną 7×7×7); jest strefa: otwiera ekran regulacji rozmiaru (pasek wełny, patrz sekcja 0). Tylko właściciel.
+- **Status** — kolor wełny wg trybu: szary=ROZBROJONY, żółty=MONITORING, pomarańczowy=CZUWANIE, czerwony=ALARM. Bez akcji po kliku.
+- **Zaufani** — lista zaufanych (liczba w lore), otwiera ekran zarządzania (dodawanie przez czat, usuwanie klikiem). Podgląd dla wszystkich, zarządzanie tylko dla właściciela.
+- **Info** — pokazuje nazwę/tryb/strefę/liczbę zaufanych w lore; kliknięcie otwiera prompt zmiany nazwy na czacie. Tylko właściciel.
+- **Uzbrój/Rozbrój** — przełącznik trybu (czerwony/limonkowy barwnik). Dostępny dla właściciela i zaufanych.
+- **Historia** — otwiera ekran zdarzeń z filtrami i stronicowaniem (sekcja 0).
+- **Reakcje** — otwiera konfigurację, które typy zdarzeń wywołują alarm. Tylko właściciel.
+- **Incydenty** — lista ostatnich „wizyt” obcych w strefie.
+- **Zamknij** — zamyka ekwipunek.
+
+Nie ma jednego generycznego przycisku „USTAWIENIA” ani wyświetlacza „Ostatni intruz” na głównym panelu — te elementy z pierwotnej koncepcji nie trafiły do implementacji.
 
 ---
 

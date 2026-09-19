@@ -2,7 +2,7 @@ package pl.volkernemrod.mcalarm.model;
 
 /**
  * Typy zdarzeń rejestrowanych przez system (V1 + rezerwacja miejsca pod
- * przyszłe kategorie). GAMEPLAY_SPEC rozdz. 9, README rozdz. 9.
+ * przyszłe kategorie). README rozdz. 9.
  */
 public enum TypZdarzenia {
     // Centrala

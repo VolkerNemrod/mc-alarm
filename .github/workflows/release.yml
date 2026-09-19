@@ -1,0 +1,59 @@
+# Workflow: buduje plugin i tworzy GitHub Release przy każdym tagu v*.*.*
+# Użycie: git tag v0.1.0 && git push origin v0.1.0
+# Efekt: GitHub Actions buduje jar i uploaduje go jako asset Release.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'   # wyzwala tylko tagi w formacie v0.1.0, v1.2.3 itp.
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+
+      - name: Ustaw Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Zbuduj paczkę (mvn package)
+        run: mvn --batch-mode package -DskipTests
+
+      - name: Znajdź zbudowany jar
+        id: find_jar
+        run: |
+          JAR=$(ls target/VolkerNemrodAlarm-*.jar | head -n 1)
+          echo "jar_path=$JAR" >> $GITHUB_OUTPUT
+          echo "jar_name=$(basename $JAR)" >> $GITHUB_OUTPUT
+
+      - name: Utwórz Release i wgraj jar
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "VolkerNemrodAlarm ${{ github.ref_name }}"
+          body: |
+            ## VolkerNemrodAlarm ${{ github.ref_name }}
+
+            ### Instalacja
+            1. Pobierz plik `.jar` poniżej
+            2. Wgraj do folderu `plugins/` serwera Paper
+            3. Zrestartuj serwer
+
+            ### Wymagania
+            - Paper 1.21.x
+            - Java 21
+
+            ### Zmiany
+            _Opis zmian uzupełnij ręcznie po utworzeniu Release na stronie GitHub._
+          files: ${{ steps.find_jar.outputs.jar_path }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'SNAPSHOT') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

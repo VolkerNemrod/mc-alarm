@@ -1,0 +1,30 @@
+# VolkerNemrodAlarm — konfiguracja domyślna
+# Plan działania: mem-palace, wing "mc-alarm". Wartości niżej odpowiadają
+# decyzjom Volkera z 2026-09-12 (room "decisions").
+
+centrala:
+  zniszczenie-fizyczne:
+    # Czas ostrzeżenia (pulsowanie, jak u creepera) przed wybuchem, w sekundach.
+    czas-pulsowania-sekundy: 3
+    # Promień eksplozji w blokach.
+    promien-eksplozji: 3
+    # Czy eksplozja niszczy okoliczne bloki (a nie tylko zadaje obrażenia).
+    niszczy-bloki: true
+    # Czy dotyczy TEŻ właściciela niszczącego własną, uzbrojoną centralę.
+    # Ustalone: tak — nie ma wyjątku dla właściciela.
+    dotyczy-wlasciciela: true
+
+alarm:
+  # Domyślny czas trwania alarmu (syrena+lampa) w sekundach, zanim wyłączy się
+  # automatycznie (GAMEPLAY_SPEC rozdz. 36). 0 = tylko ręczne wyłączenie.
+  domyslny-czas-trwania-sekundy: 60
+
+historia:
+  # Retencja historii w dniach. 0 = bez limitu (GAMEPLAY_SPEC rozdz. 64).
+  retencja-dni: 90
+
+admin:
+  # Czy /alarm admin list pokazuje nazwy właścicieli central. Domyślnie NIE —
+  # GAMEPLAY_SPEC rozdz. 63: "Administrator nie powinien domyślnie otrzymywać
+  # dostępu do prywatnych danych graczy, jeśli nie wynika to z konfiguracji serwera".
+  pokazuj-dane-graczy: false

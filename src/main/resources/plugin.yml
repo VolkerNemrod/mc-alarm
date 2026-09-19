@@ -1,0 +1,40 @@
+name: VolkerNemrodAlarm
+version: '${project.version}'
+main: pl.volkernemrod.mcalarm.VolkerNemrodAlarmPlugin
+api-version: '1.21'
+author: volkernemrod
+description: System alarmowy, monitoring i czarna skrzynka dla graczy Minecraft.
+
+commands:
+  alarm:
+    description: Główna komenda systemu VolkerNemrodAlarm.
+    usage: /alarm [help|info|status|history|incidents|zone|trusted|arm|disarm|mode]
+
+permissions:
+  alarm.use:
+    description: Podstawowe użytkowanie systemu alarmowego.
+    default: true
+  alarm.create:
+    description: Tworzenie centrali alarmowej.
+    default: true
+  alarm.manage:
+    description: Zarządzanie własną centralą (strefa, tryby, zaufani, ustawienia).
+    default: true
+  alarm.history:
+    description: Przeglądanie historii i incydentów własnej centrali.
+    default: true
+  alarm.trusted:
+    description: Zarządzanie listą zaufanych graczy.
+    default: true
+  alarm.admin:
+    description: Dostęp do komend administracyjnych /alarm admin.
+    default: op
+  alarm.admin.reload:
+    description: Przeładowanie konfiguracji pluginu.
+    default: op
+  alarm.admin.debug:
+    description: Narzędzia diagnostyczne administratora.
+    default: op
+  alarm.admin.purge:
+    description: Ręczne czyszczenie starych danych historii.
+    default: op

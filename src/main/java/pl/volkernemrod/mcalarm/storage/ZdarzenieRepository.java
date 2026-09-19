@@ -80,6 +80,14 @@ public class ZdarzenieRepository {
      * Etap 6 c.d. — filtry historii. gracz==null lub typ==null pomija dany filtr.
      */
     public List<Zdarzenie> znajdzZFiltrami(UUID centralaId, UUID gracz, TypZdarzenia typ, int limit) throws SQLException {
+        return znajdzZFiltrami(centralaId, gracz, typ, limit, 0);
+    }
+
+    /**
+     * Etap 5 (GUI historii) — jak wyżej, ale ze stronicowaniem (offset). Żeby wykryć, czy jest
+     * kolejna strona, wywołujący zwykle prosi o limit+1 i sprawdza, czy dostał więcej niż limit.
+     */
+    public List<Zdarzenie> znajdzZFiltrami(UUID centralaId, UUID gracz, TypZdarzenia typ, int limit, int offset) throws SQLException {
         StringBuilder sql = new StringBuilder(
                 "SELECT id, centrala_id, strefa_id, incydent_id, gracz, typ, waznosc, szczegoly, swiat, x, y, z, czas "
                         + "FROM zdarzenia WHERE centrala_id = ?");
@@ -93,7 +101,7 @@ public class ZdarzenieRepository {
             sql.append(" AND typ = ?");
             parametryTekstowe.add(typ.name());
         }
-        sql.append(" ORDER BY czas DESC LIMIT ?");
+        sql.append(" ORDER BY czas DESC LIMIT ? OFFSET ?");
 
         List<Zdarzenie> wynik = new ArrayList<>();
         try (PreparedStatement ps = db.getConnection().prepareStatement(sql.toString())) {
@@ -101,10 +109,35 @@ public class ZdarzenieRepository {
             for (String p : parametryTekstowe) {
                 ps.setString(i++, p);
             }
-            ps.setInt(i, limit);
+            ps.setInt(i++, limit);
+            ps.setInt(i, offset);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     wynik.add(mapuj(rs));
+                }
+            }
+        }
+        return wynik;
+    }
+
+    /**
+     * Etap 5 (GUI historii, D4) — lista graczy, którzy ostatnio mieli zdarzenie w tej centrali,
+     * od najnowszej aktywności, bez duplikatów. Używana do filtra GRACZ (klik przeczą po liście,
+     * bez wpisywania nicka na czacie).
+     */
+    public List<UUID> znajdzOstatnichGraczy(UUID centralaId, int limit) throws SQLException {
+        String sql = """
+            SELECT gracz, MAX(czas) AS ostatnio FROM zdarzenia
+            WHERE centrala_id = ? AND gracz IS NOT NULL
+            GROUP BY gracz ORDER BY ostatnio DESC LIMIT ?
+        """;
+        List<UUID> wynik = new ArrayList<>();
+        try (PreparedStatement ps = db.getConnection().prepareStatement(sql)) {
+            ps.setString(1, centralaId.toString());
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    wynik.add(UUID.fromString(rs.getString("gracz")));
                 }
             }
         }

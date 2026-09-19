@@ -74,8 +74,8 @@ public class CentralaGuiListener implements Listener {
 
     private record OczekiwanyWpis(UUID centralaId, TypWpisu typ) {}
 
-    private static final int LICZBA_ZDARZEN_W_GUI = 27;
     private static final int LICZBA_INCYDENTOW_W_GUI = 27;
+    private static final int LICZBA_OSTATNICH_GRACZY_HISTORIA = 15;
 
     public CentralaGuiListener(VolkerNemrodAlarmPlugin plugin, CentralaRejestr rejestr,
                                 CentralaRepository centralaRepository, ZdarzenieRepository zdarzenieRepository,
@@ -191,7 +191,7 @@ public class CentralaGuiListener implements Listener {
         }
     }
 
-    // ===================== HISTORIA =====================
+    // ===================== HISTORIA (Etap 5 — filtry i stronicowanie) =====================
 
     private void obslugaKlikuHistoria(InventoryClickEvent event, CentralaHistoriaGuiHolder holder) {
         event.setCancelled(true);
@@ -202,9 +202,6 @@ public class CentralaGuiListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (event.getSlot() != CentralaHistoriaGui.SLOT_WROC) {
-            return;
-        }
 
         Centrala centrala = rejestr.getCentrala(holder.getCentralaId()).orElse(null);
         if (centrala == null) {
@@ -212,7 +209,44 @@ public class CentralaGuiListener implements Listener {
             player.sendMessage("§c[VolkerNemrodAlarm] Ta centrala już nie istnieje.");
             return;
         }
-        player.openInventory(CentralaGui.zbuduj(centrala));
+
+        int slot = event.getSlot();
+        if (slot == CentralaHistoriaGui.SLOT_WROC) {
+            player.openInventory(CentralaGui.zbuduj(centrala));
+            return;
+        }
+        if (slot == CentralaHistoriaGui.SLOT_POPRZEDNIA) {
+            if (holder.getStrona() > 0) {
+                holder.setStrona(holder.getStrona() - 1);
+                odswiezHistorie(player, holder, event.getInventory());
+            }
+            return;
+        }
+        if (slot == CentralaHistoriaGui.SLOT_NASTEPNA) {
+            if (holder.isMaNastepnaStrona()) {
+                holder.setStrona(holder.getStrona() + 1);
+                odswiezHistorie(player, holder, event.getInventory());
+            }
+            return;
+        }
+        if (slot == CentralaHistoriaGui.SLOT_WYCZYSC) {
+            holder.setFiltrTyp(null);
+            holder.setFiltrGracz(null);
+            holder.setStrona(0);
+            odswiezHistorie(player, holder, event.getInventory());
+            return;
+        }
+        if (slot == CentralaHistoriaGui.SLOT_FILTR_TYP) {
+            holder.setFiltrTyp(nastepnyTypFiltra(holder.getFiltrTyp(), event.isShiftClick()));
+            holder.setStrona(0);
+            odswiezHistorie(player, holder, event.getInventory());
+            return;
+        }
+        if (slot == CentralaHistoriaGui.SLOT_FILTR_GRACZ) {
+            holder.setFiltrGracz(nastepnyGraczFiltra(holder, event.isShiftClick()));
+            holder.setStrona(0);
+            odswiezHistorie(player, holder, event.getInventory());
+        }
     }
 
     private void otworzHistorie(Player player, Centrala centrala) {
@@ -221,12 +255,64 @@ public class CentralaGuiListener implements Listener {
             return;
         }
         try {
-            List<Zdarzenie> zdarzenia = zdarzenieRepository.znajdzOstatnie(centrala.getId(), LICZBA_ZDARZEN_W_GUI);
-            player.openInventory(CentralaHistoriaGui.zbuduj(centrala, zdarzenia));
+            CentralaHistoriaGuiHolder holder = new CentralaHistoriaGuiHolder(centrala.getId());
+            holder.setOstatniGracze(zdarzenieRepository.znajdzOstatnichGraczy(centrala.getId(), LICZBA_OSTATNICH_GRACZY_HISTORIA));
+            List<Zdarzenie> zdarzenia = pobierzStroneHistorii(holder);
+            player.openInventory(CentralaHistoriaGui.zbuduj(centrala, holder, zdarzenia));
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Błąd odczytu historii do GUI.", e);
             player.sendMessage("§c[VolkerNemrodAlarm] Błąd bazy danych — sprawdź logi serwera.");
         }
+    }
+
+    /** Pobiera bieżącą stronę wg filtrów z holdera; prosi o ROZMIAR_STRONY+1, żeby wykryć kolejną stronę. */
+    private List<Zdarzenie> pobierzStroneHistorii(CentralaHistoriaGuiHolder holder) throws SQLException {
+        int limit = CentralaHistoriaGui.ROZMIAR_STRONY;
+        int offset = holder.getStrona() * limit;
+        List<Zdarzenie> wynik = zdarzenieRepository.znajdzZFiltrami(
+                holder.getCentralaId(), holder.getFiltrGracz(), holder.getFiltrTyp(), limit + 1, offset);
+        boolean maNastepna = wynik.size() > limit;
+        holder.setMaNastepnaStrona(maNastepna);
+        return maNastepna ? wynik.subList(0, limit) : wynik;
+    }
+
+    private void odswiezHistorie(Player player, CentralaHistoriaGuiHolder holder, org.bukkit.inventory.Inventory inv) {
+        try {
+            List<Zdarzenie> zdarzenia = pobierzStroneHistorii(holder);
+            CentralaHistoriaGui.odswiez(inv, holder, zdarzenia);
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Błąd odczytu historii do GUI.", e);
+            player.sendMessage("§c[VolkerNemrodAlarm] Błąd bazy danych — sprawdź logi serwera.");
+        }
+    }
+
+    /** D4 — kolejny/poprzedni typ w cyklu null(wszystkie) → FILTROWALNE_TYPY → null. */
+    private static TypZdarzenia nastepnyTypFiltra(TypZdarzenia obecny, boolean wstecz) {
+        TypZdarzenia[] typy = CentralaHistoriaGui.FILTROWALNE_TYPY;
+        if (obecny == null) {
+            return wstecz ? typy[typy.length - 1] : typy[0];
+        }
+        int idx = -1;
+        for (int i = 0; i < typy.length; i++) {
+            if (typy[i] == obecny) { idx = i; break; }
+        }
+        if (idx == -1) return null;
+        int nowyIdx = wstecz ? idx - 1 : idx + 1;
+        return (nowyIdx < 0 || nowyIdx >= typy.length) ? null : typy[nowyIdx];
+    }
+
+    /** D4 — kolejny/poprzedni gracz w cyklu null(wszyscy) → ostatniGracze → null. */
+    private static UUID nastepnyGraczFiltra(CentralaHistoriaGuiHolder holder, boolean wstecz) {
+        List<UUID> lista = holder.getOstatniGracze();
+        if (lista.isEmpty()) return null;
+        UUID obecny = holder.getFiltrGracz();
+        if (obecny == null) {
+            return wstecz ? lista.get(lista.size() - 1) : lista.get(0);
+        }
+        int idx = lista.indexOf(obecny);
+        if (idx == -1) return null;
+        int nowyIdx = wstecz ? idx - 1 : idx + 1;
+        return (nowyIdx < 0 || nowyIdx >= lista.size()) ? null : lista.get(nowyIdx);
     }
 
     // ===================== ZAUFANI =====================

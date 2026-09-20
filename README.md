@@ -2,6 +2,8 @@
 
 > ⬇️ **[Pobierz najnowszą wersję](https://github.com/VolkerNemrod/mc-alarm/releases/latest)** — gotowy `.jar` do wgrania na serwer Paper (najnowsza wersja automatycznie budowana z taga Git)
 
+> 🎬 **[Instrukcja wideo na YouTube](https://youtu.be/QaHTOp3_JUE)**
+
 > Projekt: system alarmowy, monitoring i czarna skrzynka dla graczy  
 > Status: **V1 w implementacji — etapy 0–9 zaimplementowane, trwa testowanie w grze** (stan na 2026-09-19, szczegóły w sekcji 0)  
 > Cel: stworzenie modułowego pluginu Paper/Spigot, który pozwala graczom wyposażyć swoje budynki w system alarmowy rejestrujący aktywność innych graczy.

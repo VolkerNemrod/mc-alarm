@@ -27,10 +27,8 @@ public class Lampa implements Urzadzenie {
     @Override
     public void aktywuj() {
         aktywna = true;
-        if (lokalizacja.getWorld() != null) {
-            lokalizacja.getWorld().spawnParticle(Particle.FLAME,
-                    lokalizacja.clone().add(0.5, 1.2, 0.5), 12, 0.3, 0.3, 0.3, 0.02);
-        }
+        // Etap B — efekty wizualne emitują wyłącznie głośniki (GlosnikListener).
+        // Lampa nie emituje żadnych cząsteczek przy bloku centrali.
     }
 
     @Override

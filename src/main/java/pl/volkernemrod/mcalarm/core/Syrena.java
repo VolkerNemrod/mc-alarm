@@ -26,10 +26,8 @@ public class Syrena implements Urzadzenie {
     @Override
     public void aktywuj() {
         aktywna = true;
-        if (lokalizacja.getWorld() != null) {
-            lokalizacja.getWorld().playSound(lokalizacja, Sound.BLOCK_BELL_USE, 3.0f, 0.6f);
-            lokalizacja.getWorld().playSound(lokalizacja, Sound.ENTITY_WITHER_HURT, 1.0f, 1.4f);
-        }
+        // Etap B — džwięk emitują wyłącznie głośniki (GlosnikListener).
+        // Syrena nie emituje żadnych efektów przy bloku centrali.
     }
 
     @Override
